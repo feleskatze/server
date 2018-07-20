@@ -1,0 +1,53 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<!--マルチ出力用インデック-->
+  <!-- Form
+  ================================================== -->
+<div class="form">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12">
+        <p style="margin-left:15px;">
+          AIが顔写真から花澤香菜の顔を検出します。(花澤香菜、佐倉綾音、茅野愛衣、悠木碧に対応)
+        </p>
+
+{% if result %}
+	<div class="col-md-12">
+		<img src="{{img_path}}"><br>
+	</div>
+	<div class="col-md-12">
+		{% for human in result %}
+		<div class="detail">
+			{% if human['rank'][0]['rate'] > 90 %}
+				<p>この画像は<span class="red">{{human['rank'][0]['name']}}</span>の画像です</p>
+			{% else %}
+				<p>この画像は四人以外の人の画像です</p>
+			{% endif %}
+			<p><img src="{{human['dst_file_path']}}" class='cut_image'><br></p>
+			<p class="detail_container">
+				<判定詳細>
+				{% for _ in range(4) %}
+				<br>{{human['rank'][loop.index0]['name']}} : {{human['rank'][loop.index0]['rate']}}%
+				{% endfor %}
+				<br>
+			</p>
+		</div>
+		{% endfor %}
+	</div>
+
+{% endif %}
+					<div class="col-md-12">
+            <h3>顔写真をアップロードしてください！</h3>
+          </div>
+        <div class="col-md-12" style="margin-top:10px; margin-bottom:20px;">
+          <form action="/post" method="post" class="form-inline" enctype = "multipart/form-data">
+            <input type = "file" name = "file" />
+            <button type="submit" class="btn btn-primary" style="margin-top:5px;">花澤香菜を検出開始</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
