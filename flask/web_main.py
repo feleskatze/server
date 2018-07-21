@@ -44,6 +44,7 @@ from module import weather
 from module import biblio
 from module import USJ
 from module import TD
+from module import TubeGet
 
 
 
@@ -139,6 +140,7 @@ def handle_message(event):
         ReturnText = ReturnText + '\n\n書誌情報取得: #ISBN[ISBN]\n例: #ISBN 9784041025475 #ISBN9784041025475\n 情報元:国立国会図書館サーチ(API)'
         ReturnText = ReturnText + '\n\n法令番号　#法令番号 [改行] [検索したい法令名] \n情報元:e-Gov法令検索 http://elaws.e-gov.go.jp/search/elawsSearch/elaws_search/lsg0100/'
         ReturnText = ReturnText + '\n\n法令　#法令 [改行] [検索したい法令番号] [改行] [検索したい条]\n情報元:法令API'
+        ReturnText = ReturnText + '\n\nYouTubeToMP3 #YtoMP3 [YouTubeのURL] \nMP3ファイルのあるURLを返します'
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(text = ReturnText)
@@ -184,6 +186,12 @@ def handle_message(event):
             TextSendMessage(text=ReturnText)
             )
 
+    if text.find('#YtoMP3') == 0 and len(text)>7:
+        ReturnText = TubeGet.TubeGet(text)
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text='https://feleskatze.net' + ReturnText)
+            )
 
 if __name__ == '__main__':
     app.run(port='80')
