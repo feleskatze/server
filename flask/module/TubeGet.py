@@ -11,16 +11,13 @@ def TubeGet(text):
 
     video = yt.streams.filter(progressive=True, mime_type='video/mp4').desc().first()
     video.player_config_args['title'] = filename
-    video.download('./tmp/')
+    video.download('/home/feleskatze/www/flask/tmp/')
 
-    stream = ffmpeg.input('./tmp/' + filename + '.mp4')
-    stream = ffmpeg.output(stream,'./tmp/' + filename+ '.mp3')
+    stream = ffmpeg.input('/home/feleskatze/www/flask/tmp/' + filename + '.mp4')
+    stream = ffmpeg.output(stream,'/home/feleskatze/www/flask/tmp/' + filename+ '.mp3')
     ffmpeg.run(stream)
 
-    ReturnData = []
-    ReturnData.append('./tmp/' + filename + '.mp3')
-    ReturnData.append(os.path.getsize(ReturnData[0]))
-    return ReturnData
+    return '/tmp/' + filename+ '.mp3'
 
 
 if __name__ == '__main__':

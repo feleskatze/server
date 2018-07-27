@@ -7,6 +7,9 @@ import xml.etree.ElementTree as ET
 import requests
 import xmltodict
 import yaml
+import cv2
+import io
+from PIL import Image
 
 import tensorflow as tf
 import multiprocessing as mp
@@ -44,6 +47,9 @@ from module import weather
 from module import biblio
 from module import USJ
 from module import TD
+from module import TubeGet
+from module import GoogleOCR
+import remove_tmp
 
 
 
@@ -54,7 +60,7 @@ app = Flask(__name__, static_folder='tmp')
 FULL_PATH = '/home/feleskatze/www/flask/'
 UPLOAD_FOLDER = 'tmp/'
 
-
+Flag = 'Default'
 
 
 # LINE API KEY
@@ -139,6 +145,8 @@ def handle_message(event):
         ReturnText = ReturnText + '\n\n書誌情報取得: #ISBN[ISBN]\n例: #ISBN 9784041025475 #ISBN9784041025475\n 情報元:国立国会図書館サーチ(API)'
         ReturnText = ReturnText + '\n\n法令番号　#法令番号 [改行] [検索したい法令名] \n情報元:e-Gov法令検索 http://elaws.e-gov.go.jp/search/elawsSearch/elaws_search/lsg0100/'
         ReturnText = ReturnText + '\n\n法令　#法令 [改行] [検索したい法令番号] [改行] [検索したい条]\n情報元:法令API'
+        ReturnText = ReturnText + '\n\nYouTubeToMP3 #YtoMP3 [YouTubeのURL] \nMP3ファイルのあるURLを返します'
+        ReturnText = ReturnText + '\n\nOCR #OCR [の後に画像投稿]\n画像から文字列を検出出力します\n使用API: Google Cloud Vision API'
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(text = ReturnText)
@@ -179,6 +187,38 @@ def handle_message(event):
 # 法令
     if text.find('#法令') == 0 and len(text) > 3:
         ReturnText = law.law_search(text)
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text=ReturnText)
+            )
+
+    if text.find('#YtoMP3') == 0 and len(text)>7:
+        ReturnText = TubeGet.TubeGet(text)
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text='https://feleskatze.net' + ReturnText)
+            )
+    
+    # 画像OCR用　フラグ建設
+    if text.find('#OCR') == 0:
+        global Flag
+        Flag= 'OCR'
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text='OCRフラグを立てました。\n画像を投稿してください。')
+            )
+
+@handler.add(MessageEvent, message=ImageMessage)
+def handle_content_message(event):
+    global Flag
+    if Flag == 'OCR':
+        message_content = line_bot_api.get_message_content(event.message.id)
+        i = Image.open(io.BytesIO(message_content.content))
+        filename = FULL_PATH + UPLOAD_FOLDER + event.message.id + '.jpg'
+        i.save(filename)
+        ReturnText = GoogleOCR.GoogleOCR(filename)
+        Flag = 'Default'
+        remove_tmp.remove_tmp()
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(text=ReturnText)
